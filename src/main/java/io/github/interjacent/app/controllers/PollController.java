@@ -111,9 +111,9 @@ public class PollController {
     public ResponseEntity<?> addUserInterval(
         @PathVariable String pollId,
         @PathVariable String userId,
-        @RequestBody UserInterval userInterval
+        @RequestBody List<UserInterval> userIntervals
     ) {
-        pollService.addUserInterval(pollId, userId, userInterval);
+        pollService.setUserInterval(pollId, userId, userIntervals);
 
         return ResponseEntity.ok(true);
     }
