@@ -14,10 +14,23 @@ USER_ID=12345678-1234-1234-1234-123456789012
 USER_NAME=helloworld
 
 # add a user
-JOIN_RESPONSE=$(curl "$BASE_URL/$POLL_ID/join" -f -H Content-Type:application/json --data-raw '{"userId": "'"$USER_ID"'", "userName": "'"$USER_NAME"'"}')
+curl "$BASE_URL/$POLL_ID/join" -f -H Content-Type:application/json --data-raw '{"userId": "'"$USER_ID"'", "userName": "'"$USER_NAME"'"}' | jq
 
 # check the poll
-curl "$BASE_URL/$POLL_ID" -f
+curl "$BASE_URL/$POLL_ID" -f | jq
 
 # set intervals
-SET_INTERVALS_RESPONSE=$(curl "$BASE_URL/$POLL_ID/users/$USER_ID/intervals" -f -H Content-Type:application/json --data-raw '[{"start": 1731186000, "end": 1731272000}, {"start": "1731359000, "end": 1731445200}]')
+curl "$BASE_URL/$POLL_ID/users/$USER_ID/intervals" -f -H Content-Type:application/json --data-raw '[{"start": 1731186000, "end": 1731272000}, {"start": 1731359000, "end": 1731445200}]' | jq
+#curl "$BASE_URL/$POLL_ID/users/$USER_ID/intervals" -f -H Content-Type:application/json --data-raw '{"start": 1731186000, "end": 1731272000}' | jq
+
+# get intervals
+curl "$BASE_URL/$POLL_ID/users/$USER_ID/intervals" -f | jq
+
+# check the poll again
+curl "$BASE_URL/$POLL_ID" -f | jq
+
+# close the poll
+curl "$BASE_URL/$POLL_ID/finish" -f -H Content-Type:application/json --data-raw '{"adminToken": "'"$ADMIN_TOKEN"'", "start": 1731186000, "end": 1731187000}' | jq
+
+# check the poll for the last time
+curl "$BASE_URL/$POLL_ID" -f | jq
