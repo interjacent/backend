@@ -33,6 +33,16 @@ public class IntervalSet<N extends Comparable<N>> {
         intervals.add(interval);
     }
 
+    boolean isValid() {
+        if (intervals.isEmpty()) return true;
+        if (!intervals.get(0).isValid()) return false;
+        for (int i = 1; i < intervals.size(); i++) {
+            if (!intervals.get(i).isValid()) return false;
+            if (intervals.get(i - 1).end().compareTo(intervals.get(i).begin()) >= 0) return false;
+        }
+        return true;
+    }
+
     /**
      * Unionizes overlapping intervals.
      */
@@ -73,9 +83,16 @@ public class IntervalSet<N extends Comparable<N>> {
             Interval<N> next = intervals.get(i);
             if (!added && next.begin().compareTo(interval.begin()) > 0) {
                 newIntervals.add(interval);
+                added = true;
             }
             newIntervals.add(next);
         }
+
+        if (!added) {
+            newIntervals.add(interval);
+        }
+
+        intervals = newIntervals;
 
         simplify();
     }
