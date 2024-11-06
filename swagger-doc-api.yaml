@@ -1,0 +1,303 @@
+openapi: 3.0.3
+info:
+  title: Intervals service
+  description: Intervals service REST endpoints
+  version: 1.0.0
+servers:
+  - url: 'https://localhost:65535/api/v1'
+paths:
+  /polls:
+    post:
+      summary: Create new poll
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewPollRequestSchema'
+      tags: 
+        - Polls
+      responses:
+        '201':
+          description: Returns information about 
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NewPollResponseSchema'
+  /polls/{pollId}/join:
+    post:
+      summary: Add user to poll
+      parameters:
+        - name: pollId
+          in: path
+          required: true
+          description: Poll id
+          schema:
+            type: integer
+            format: int64
+            nullable: false
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PollInviteRequestSchema'
+      tags:
+        - Polls
+      responses:
+        '201':
+          description: Returns if user joined to poll
+          content:
+            application/json:
+              schema:
+                type: boolean
+  /polls/{adminToken}/finish:
+    post:
+      summary: Stop poll and choose interval
+      parameters:
+        - name: adminToken
+          in: path
+          required: true
+          description: Admin token
+          schema:
+            type: integer
+            format: int64
+            nullable: false
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PollIntervalSchema'
+      tags:
+        - Polls
+      responses:
+        '200':
+          description: Returns appropriate time interval
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IntervalResponseSchema'
+        '400':
+          description: Invalid poll id or unable to calculate time interval
+        '404':
+          description: No such poll with given id
+  /polls/{pollId}:
+    get:
+      summary: Get poll by id
+      parameters:
+        - name: pollId
+          in: path
+          required: true
+          description: Poll id
+          schema:
+            type: integer
+            format: int64
+            nullable: false
+      tags: 
+        - Polls      
+      responses:
+        '200':
+          description: Returns poll information
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PollResponseSchema'
+        '400':
+          description: Invalid id for poll
+        '404':
+          description: No such poll with given id
+  /polls/{pollId}/users/{userId}/intervals:
+    get:
+      summary: Get all time intervals for user
+      parameters:
+        - name: pollId
+          in: path
+          required: true
+          description: Poll id
+          schema:
+            type: integer
+            format: int64
+            nullable: false
+        - name: userId
+          in: path
+          required: true
+          description: User UUID
+          schema:
+            type: string
+            nullable: false
+        - name: startTimestamp
+          in: query
+          required: false
+          description: Start timestamp for fetching intervals. If omitted, intervals starting from first day of current week will be fetched
+          schema: 
+            type: integer
+            format: int64
+            minimum: 0
+            exclusiveMinimum: true
+            example: 1000
+      tags:
+        - Intervals
+      responses:
+        '200': 
+          description: Returns all time intervals for user
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  allOf:
+                    - $ref: '#/components/schemas/IntervalResponseSchema'
+        '400':
+          description: Invalid param supplied
+    post:
+      summary: Create new intervals for user
+      parameters:
+        - name: pollId
+          in: path
+          required: true
+          description: Poll id
+          schema:
+            type: integer
+            format: int64
+            nullable: false
+        - name: userId
+          in: path
+          required: true
+          description: User UUID
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                allOf:
+                  - $ref: '#/components/schemas/IntervalResponseSchema'
+      tags:
+        - Intervals
+      responses:
+        '201': 
+          description: Returns if interval successfully added
+          content:
+            application/json:
+              schema:
+                type: boolean
+                example: true
+        '400':
+          description: Invalid data for time interval
+components:
+  schemas:
+    PollIntervalSchema:
+      type: object
+      properties:
+          start:
+            description: UNIX start time (included)
+            type: integer
+            format: int64
+            minimum: 0
+            exclusiveMinimum: true
+            example: 1000
+          end:
+            description: UNIX end time (excluded)
+            type: integer
+            format: int64
+            minimum: 0
+            exclusiveMinimum: true
+            example: 2000
+    NewPollRequestSchema:
+      type: object
+      properties:
+        days:
+          description: List of intervals for choosing
+          type: array
+          items:
+            allOf:
+              - $ref: '#/components/schemas/PollIntervalSchema' 
+    NewPollResponseSchema:
+      type: object
+      properties:
+        pollId:
+          description: Id for inviting
+          type: string
+          nullable: false
+        adminToken:
+          description: adminToken
+          type: string
+          nullable: false
+    PollInviteRequestSchema:
+      type: object
+      properties:
+        userId:
+          description: User UUID
+          type: string
+          nullable: false
+        userName:
+          description: Username
+          type: string
+          nullable: false      
+    PollResponseSchema:
+      type: object
+      properties:
+        active:
+          description: Is poll active or not
+          type: boolean
+        days:
+          description: List of intervals for choosing
+          type: array
+          items:
+            allOf:
+              - $ref: '#/components/schemas/PollIntervalSchema' 
+        users:
+          description: List of participants
+          type: array
+          items:
+            allOf:
+              - $ref: '#/components/schemas/UserIntervalsResponseSchema'
+        availables:
+          description: List of availables intervals
+          type: array
+          items:
+            allOf:
+              - $ref: '#/components/schemas/PollIntervalSchema'
+        result:
+          description: Poll result (can be null)
+          type: object
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/PollIntervalSchema'
+    UserIntervalsResponseSchema:
+      type: object
+      properties:
+        userName:
+          description: Username
+          type: string
+          nullable: false
+          example: "user"
+        intervals:
+          description: List of time intervals for user
+          type: array
+          items:
+            allOf:
+              - $ref: '#/components/schemas/IntervalResponseSchema'
+    IntervalResponseSchema: 
+      type: object
+      properties:
+        start:
+          description: UNIX start time (included)
+          type: integer
+          format: int64
+          minimum: 0
+          exclusiveMinimum: true
+          example: 1000
+        end:
+          description: UNIX end time (excluded)
+          type: integer
+          format: int64
+          minimum: 0
+          exclusiveMinimum: true
+          example: 2000
+        busy:
+          description: Participant is busy or not during this interval
+          type: boolean
+          example: true
