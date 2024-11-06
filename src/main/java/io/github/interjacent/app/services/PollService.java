@@ -64,8 +64,8 @@ public class PollService {
         pollRepository.save(poll);
     }
 
-    public void joinUser(String publicPollId, PollInviteRequest request) {
-        Poll poll = pollRepository.findByUuid(UUID.fromString(publicPollId));
+    public void joinUser(String pollId, PollInviteRequest request) {
+        Poll poll = pollRepository.findByUuid(UUID.fromString(pollId));
 
         PollUser user = new PollUser();
         user.setPoll(poll);
@@ -75,27 +75,27 @@ public class PollService {
         pollUserRepository.save(user);
     }
 
-    public Poll getPoll(String publicPollId) {
-        return pollRepository.findByUuid(UUID.fromString(publicPollId));
+    public Poll getPoll(String pollId) {
+        return pollRepository.findByUuid(UUID.fromString(pollId));
     }
 
-    public PollUser getUser(String publicPollId, String userId) {
+    public PollUser getUser(String pollId, String userId) {
         return pollUserRepository.findByPoll_UuidAndUserId(
-                UUID.fromString(publicPollId),
+                UUID.fromString(pollId),
                 UUID.fromString(userId)
         );
     }
 
-    public List<PollUserInterval> getUserIntervals(String publicPollId, String userId) {
+    public List<PollUserInterval> getUserIntervals(String pollId, String userId) {
         return pollUserRepository.findByPoll_UuidAndUserId(
-                UUID.fromString(publicPollId),
+                UUID.fromString(pollId),
                 UUID.fromString(userId)
         ).getIntervals();
     }
 
-    public void addUserInterval(String publicPollId, String userId, UserInterval userInterval) {
+    public void addUserInterval(String pollId, String userId, UserInterval userInterval) {
         PollUser pollUser = pollUserRepository.findByPoll_UuidAndUserId(
-                    UUID.fromString(publicPollId),
+                    UUID.fromString(pollId),
                     UUID.fromString(userId)
                 );
 
@@ -109,11 +109,11 @@ public class PollService {
         pollUserIntervalRepository.save(pollUserInterval);
     }
 
-    public List<PollDay> calculateAvailables(String publicPollId) {
+    public List<PollDay> calculateAvailable(String pollId) {
         Map<UUID, IntervalSet<Long>> intervals = new TreeMap<>();
 
         pollUserRepository.findByPoll_Uuid(
-                UUID.fromString(publicPollId)
+                UUID.fromString(pollId)
         ).forEach(pollUser -> {
             for (PollUserInterval interval : pollUser.getIntervals()) {
                 UUID uuid = interval.getUser().getUserId();

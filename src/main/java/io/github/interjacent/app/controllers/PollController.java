@@ -34,27 +34,27 @@ public class PollController {
     }
 
     @PostMapping(
-        path = "{publicPollId}/join",
+        path = "{pollId}/join",
         consumes = MediaType.APPLICATION_JSON_VALUE,
         produces = MediaType.APPLICATION_JSON_VALUE
     )
     public ResponseEntity<?> joinToPoll(
-        @PathVariable String publicPollId,
+        @PathVariable String pollId,
         @RequestBody PollInviteRequest request
     ) {
-        pollService.joinUser(publicPollId, request);
+        pollService.joinUser(pollId, request);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(true);
     }
 
     @GetMapping(
-        path = "{publicPollId}",
+        path = "{pollId}",
         produces = MediaType.APPLICATION_JSON_VALUE
     )
     public ResponseEntity<?> getPoll(
-        @PathVariable String publicPollId
+        @PathVariable String pollId
     ) {
-        Poll poll = pollService.getPoll(publicPollId);
+        Poll poll = pollService.getPoll(pollId);
 
         PollResponse response = new PollResponse();
 
@@ -69,21 +69,21 @@ public class PollController {
 
             return userIntervalsResponse;
         }).toList());
-        response.setAvailables(pollService.calculateAvailables(publicPollId));
+        response.setAvailables(pollService.calculateAvailable(pollId));
 
         return ResponseEntity.ok(response);
     }
 
     @GetMapping(
-        path = "{publicPollId}/users/{userId}/intervals",
+        path = "{pollId}/users/{userId}/intervals",
         produces = MediaType.APPLICATION_JSON_VALUE
     )
     public ResponseEntity<?> getUserIntervals(
-            @PathVariable String publicPollId,
+            @PathVariable String pollId,
             @PathVariable String userId
     ) {
-        PollUser pollUser = pollService.getUser(publicPollId, userId);
-        List<PollUserInterval> pollUserIntervals = pollService.getUserIntervals(publicPollId, userId);
+        PollUser pollUser = pollService.getUser(pollId, userId);
+        List<PollUserInterval> pollUserIntervals = pollService.getUserIntervals(pollId, userId);
         UserIntervalsResponse response = new UserIntervalsResponse();
         response.setUserName(pollUser.getUsername());
         response.setIntervals(pollUserIntervals.stream().map(pollUserInterval ->
@@ -97,30 +97,31 @@ public class PollController {
     }
 
     @PostMapping(
-        path = "{publicPollId}/users/{userId}/intervals",
+        path = "{pollId}/users/{userId}/intervals",
         consumes = MediaType.APPLICATION_JSON_VALUE,
         produces = MediaType.APPLICATION_JSON_VALUE
     )
     public ResponseEntity<?> addUserInterval(
-        @PathVariable String publicPollId,
+        @PathVariable String pollId,
         @PathVariable String userId,
         @RequestBody UserInterval userInterval
     ) {
-        pollService.addUserInterval(publicPollId, userId, userInterval);
+        pollService.addUserInterval(pollId, userId, userInterval);
 
         return ResponseEntity.ok(true);
     }
 
     @PostMapping(
-        path = "{privatePollId}/finish",
+        path = "{adminToken}/finish",
         consumes = MediaType.APPLICATION_JSON_VALUE,
         produces = MediaType.APPLICATION_JSON_VALUE
     )
     public ResponseEntity<?> finish(
-        @PathVariable String privatePollId,
+        @PathVariable String adminToken,
         @RequestBody UserIntervalsResponse userIntervalResponse
     ) {
-        Poll poll = pollService.getPoll(privatePollId);
+        Poll poll = pollService.getPoll(adminToken);
+
         if (poll == null)
             return ResponseEntity.status(404).body(userIntervalResponse);
         if (!poll.getOpen())
