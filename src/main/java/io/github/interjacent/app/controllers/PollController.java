@@ -2,6 +2,7 @@ package io.github.interjacent.app.controllers;
 
 import io.github.interjacent.app.dto.*;
 import io.github.interjacent.app.entity.Poll;
+import io.github.interjacent.app.entity.PollResult;
 import io.github.interjacent.app.entity.PollUser;
 import io.github.interjacent.app.entity.PollUserInterval;
 import io.github.interjacent.app.services.PollService;
@@ -12,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RequiredArgsConstructor
 @RestController
@@ -71,6 +73,12 @@ public class PollController {
         }).toList());
         response.setAvailables(pollService.calculateAvailables(publicPollId));
 
+        PollResult pollResult = pollService.getPollResult(publicPollId);
+
+        response.setResult(Optional.ofNullable(pollResult).map(result ->
+                    new PollDay(pollResult.getStart(), pollResult.getEnd())
+                ).orElse(null));
+
         return ResponseEntity.ok(response);
     }
 
@@ -118,16 +126,16 @@ public class PollController {
     )
     public ResponseEntity<?> finish(
         @PathVariable String privatePollId,
-        @RequestBody UserIntervalsResponse userIntervalResponse
+        @RequestBody PollDay pollResult
     ) {
-        Poll poll = pollService.getPoll(privatePollId);
+        Poll poll = pollService.getPollByAdminToken(privatePollId);
         if (poll == null)
-            return ResponseEntity.status(404).body(userIntervalResponse);
+            return ResponseEntity.status(404).build();
         if (!poll.getOpen())
-            return ResponseEntity.status(400).body(userIntervalResponse);
+            return ResponseEntity.status(400).build();
 
-        pollService.closePoll(poll);
+        pollService.closePollAndSaveResult(poll, pollResult);
 
-        return ResponseEntity.ok(userIntervalResponse);
+        return ResponseEntity.ok(pollResult);
     }
 }

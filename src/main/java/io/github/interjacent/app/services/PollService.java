@@ -4,15 +4,9 @@ import io.github.interjacent.app.dto.NewPollRequest;
 import io.github.interjacent.app.dto.PollDay;
 import io.github.interjacent.app.dto.PollInviteRequest;
 import io.github.interjacent.app.dto.UserInterval;
-import io.github.interjacent.app.entity.Poll;
-import io.github.interjacent.app.entity.PollInterval;
-import io.github.interjacent.app.entity.PollUser;
-import io.github.interjacent.app.entity.PollUserInterval;
+import io.github.interjacent.app.entity.*;
 import io.github.interjacent.app.math.*;
-import io.github.interjacent.app.repositories.PollIntervalRepository;
-import io.github.interjacent.app.repositories.PollRepository;
-import io.github.interjacent.app.repositories.PollUserIntervalRepository;
-import io.github.interjacent.app.repositories.PollUserRepository;
+import io.github.interjacent.app.repositories.*;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -30,6 +24,7 @@ public class PollService {
     private PollIntervalRepository pollIntervalRepository;
     private PollUserRepository pollUserRepository;
     private PollUserIntervalRepository pollUserIntervalRepository;
+    private PollResultRepository pollResultRepository;
 
     public Poll createPoll(NewPollRequest request) {
         String publicId = UUID.randomUUID().toString();
@@ -59,8 +54,16 @@ public class PollService {
         return savedEntity;
     }
 
-    public void closePoll(Poll poll) {
+    public void closePollAndSaveResult(Poll poll, PollDay pollResult) {
+        PollResult result = new PollResult();
+        result.setPoll(poll);
+        result.setStart(pollResult.getStart());
+        result.setEnd(pollResult.getEnd());
+
+        pollResultRepository.save(result);
+
         poll.setOpen(false);
+        poll.setResult(result);
         pollRepository.save(poll);
     }
 
@@ -77,6 +80,10 @@ public class PollService {
 
     public Poll getPoll(String publicPollId) {
         return pollRepository.findByUuid(UUID.fromString(publicPollId));
+    }
+
+    public Poll getPollByAdminToken(String adminToken) {
+        return pollRepository.findByAdminToken(adminToken);
     }
 
     public PollUser getUser(String publicPollId, String userId) {
@@ -127,11 +134,15 @@ public class PollService {
         return intervals
                 .values()
                 .stream()
-                .reduce((a, b) -> a.intersection(b))
+                .reduce(IntervalSet::intersection)
                 .orElse(new IntervalSet<>())
                 .getIntervals()
                 .stream()
                 .map((interval) -> new PollDay(interval.begin(), interval.end()))
                 .toList();
+    }
+
+    public PollResult getPollResult(String publicPollId) {
+        return pollResultRepository.findByPoll_Uuid(UUID.fromString(publicPollId));
     }
 }
