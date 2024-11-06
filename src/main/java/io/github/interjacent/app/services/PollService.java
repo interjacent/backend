@@ -1,12 +1,14 @@
 package io.github.interjacent.app.services;
 
 import io.github.interjacent.app.dto.NewPollRequest;
+import io.github.interjacent.app.dto.PollDay;
 import io.github.interjacent.app.dto.PollInviteRequest;
 import io.github.interjacent.app.dto.UserInterval;
 import io.github.interjacent.app.entity.Poll;
 import io.github.interjacent.app.entity.PollInterval;
 import io.github.interjacent.app.entity.PollUser;
 import io.github.interjacent.app.entity.PollUserInterval;
+import io.github.interjacent.app.math.*;
 import io.github.interjacent.app.repositories.PollIntervalRepository;
 import io.github.interjacent.app.repositories.PollRepository;
 import io.github.interjacent.app.repositories.PollUserIntervalRepository;
@@ -17,6 +19,8 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.UUID;
 
 @Service
@@ -103,5 +107,31 @@ public class PollService {
         pollUser.getIntervals().add(pollUserInterval);
 
         pollUserIntervalRepository.save(pollUserInterval);
+    }
+    
+    public List<PollDay> available(String publicPollId) {
+        List<PollUserInterval> pollIntervals = pollUserRepository.findByPoll_Uuid(
+                UUID.fromString(publicPollId)
+        ).getIntervals();
+
+        Map<UUID, IntervalSet<Long>> intervals = new TreeMap<>();
+
+        for (PollUserInterval interval : pollIntervals) {
+            UUID uuid = interval.getUser().getUserId();
+            if (!intervals.containsKey(uuid)) {
+                intervals.put(uuid, new IntervalSet<>());
+            }
+            intervals.get(uuid).add(new Interval<Long>(interval.getStart(), interval.getEnd()));
+        }
+
+        return intervals
+                .values()
+                .stream()
+                .reduce((a, b) -> a.intersection(b))
+                .orElse(new IntervalSet<>())
+                .getIntervals()
+                .stream()
+                .map((interval) -> new PollDay(interval.begin(), interval.end()))
+                .toList();
     }
 }

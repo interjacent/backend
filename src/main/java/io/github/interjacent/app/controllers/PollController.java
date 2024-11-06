@@ -4,8 +4,6 @@ import io.github.interjacent.app.dto.*;
 import io.github.interjacent.app.entity.Poll;
 import io.github.interjacent.app.entity.PollUser;
 import io.github.interjacent.app.entity.PollUserInterval;
-import io.github.interjacent.app.math.*;
-import io.github.interjacent.app.repositories.PollRepository;
 import io.github.interjacent.app.services.PollService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -71,6 +69,7 @@ public class PollController {
 
             return userIntervalsResponse;
         }).toList());
+        response.setAvailables(pollService.available(publicPollId));
 
         return ResponseEntity.ok(response);
     }
@@ -130,13 +129,5 @@ public class PollController {
         pollService.closePoll(poll);
 
         return ResponseEntity.ok(userIntervalResponse);
-    }
-
-    private static IntervalSet<Long> transformSet(UserIntervalsResponse response) {
-        IntervalSet<Long> retval = new IntervalSet<>();
-        for (UserInterval interval : response.getIntervals()) {
-            retval.add(new Interval<Long>(interval.getStart(), interval.getEnd()));
-        }
-        return retval;
     }
 }

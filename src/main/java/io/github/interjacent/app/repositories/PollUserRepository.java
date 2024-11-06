@@ -9,4 +9,5 @@ import java.util.UUID;
 @Repository
 public interface PollUserRepository extends JpaRepository<PollUser, Long> {
     PollUser findByPoll_UuidAndUserId(UUID uuid, UUID userId);
+    PollUser findByPoll_Uuid(UUID uuid);
 }
