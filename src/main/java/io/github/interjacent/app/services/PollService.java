@@ -4,15 +4,9 @@ import io.github.interjacent.app.dto.NewPollRequest;
 import io.github.interjacent.app.dto.PollDay;
 import io.github.interjacent.app.dto.PollInviteRequest;
 import io.github.interjacent.app.dto.UserInterval;
-import io.github.interjacent.app.entity.Poll;
-import io.github.interjacent.app.entity.PollInterval;
-import io.github.interjacent.app.entity.PollUser;
-import io.github.interjacent.app.entity.PollUserInterval;
+import io.github.interjacent.app.entity.*;
 import io.github.interjacent.app.math.*;
-import io.github.interjacent.app.repositories.PollIntervalRepository;
-import io.github.interjacent.app.repositories.PollRepository;
-import io.github.interjacent.app.repositories.PollUserIntervalRepository;
-import io.github.interjacent.app.repositories.PollUserRepository;
+import io.github.interjacent.app.repositories.*;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -30,14 +24,15 @@ public class PollService {
     private PollIntervalRepository pollIntervalRepository;
     private PollUserRepository pollUserRepository;
     private PollUserIntervalRepository pollUserIntervalRepository;
+    private PollResultRepository pollResultRepository;
 
     public Poll createPoll(NewPollRequest request) {
-        String publicId = UUID.randomUUID().toString();
-        String privateId = UUID.randomUUID().toString();
+        String pollId = UUID.randomUUID().toString();
+        String adminToken = UUID.randomUUID().toString();
 
         Poll entity = new Poll();
-        entity.setUuid(UUID.fromString(publicId));
-        entity.setAdminToken(privateId);
+        entity.setUuid(UUID.fromString(pollId));
+        entity.setAdminToken(adminToken);
         entity.setOpen(true);
 
         long currentTimestamp = LocalDateTime.now().toEpochSecond(ZoneOffset.ofHours(-3));
@@ -59,13 +54,21 @@ public class PollService {
         return savedEntity;
     }
 
-    public void closePoll(Poll poll) {
+    public void closePollAndSaveResult(Poll poll, PollDay pollResult) {
+        PollResult result = new PollResult();
+        result.setPoll(poll);
+        result.setStart(pollResult.getStart());
+        result.setEnd(pollResult.getEnd());
+
+        pollResultRepository.save(result);
+
         poll.setOpen(false);
+        poll.setResult(result);
         pollRepository.save(poll);
     }
 
-    public void joinUser(String publicPollId, PollInviteRequest request) {
-        Poll poll = pollRepository.findByUuid(UUID.fromString(publicPollId));
+    public void joinUser(String pollId, PollInviteRequest request) {
+        Poll poll = pollRepository.findByUuid(UUID.fromString(pollId));
 
         PollUser user = new PollUser();
         user.setPoll(poll);
@@ -75,27 +78,31 @@ public class PollService {
         pollUserRepository.save(user);
     }
 
-    public Poll getPoll(String publicPollId) {
-        return pollRepository.findByUuid(UUID.fromString(publicPollId));
+    public Poll getPoll(String pollId) {
+        return pollRepository.findByUuid(UUID.fromString(pollId));
     }
 
-    public PollUser getUser(String publicPollId, String userId) {
+    public Poll getPollByAdminToken(String adminToken) {
+        return pollRepository.findByAdminToken(adminToken);
+    }
+
+    public PollUser getUser(String pollId, String userId) {
         return pollUserRepository.findByPoll_UuidAndUserId(
-                UUID.fromString(publicPollId),
+                UUID.fromString(pollId),
                 UUID.fromString(userId)
         );
     }
 
-    public List<PollUserInterval> getUserIntervals(String publicPollId, String userId) {
+    public List<PollUserInterval> getUserIntervals(String pollId, String userId) {
         return pollUserRepository.findByPoll_UuidAndUserId(
-                UUID.fromString(publicPollId),
+                UUID.fromString(pollId),
                 UUID.fromString(userId)
         ).getIntervals();
     }
 
-    public void addUserInterval(String publicPollId, String userId, UserInterval userInterval) {
+    public void addUserInterval(String pollId, String userId, UserInterval userInterval) {
         PollUser pollUser = pollUserRepository.findByPoll_UuidAndUserId(
-                    UUID.fromString(publicPollId),
+                    UUID.fromString(pollId),
                     UUID.fromString(userId)
                 );
 
@@ -109,11 +116,11 @@ public class PollService {
         pollUserIntervalRepository.save(pollUserInterval);
     }
 
-    public List<PollDay> calculateAvailables(String publicPollId) {
+    public List<PollDay> calculateAvailables(String pollId) {
         Map<UUID, IntervalSet<Long>> intervals = new TreeMap<>();
 
         pollUserRepository.findByPoll_Uuid(
-                UUID.fromString(publicPollId)
+                UUID.fromString(pollId)
         ).forEach(pollUser -> {
             for (PollUserInterval interval : pollUser.getIntervals()) {
                 UUID uuid = interval.getUser().getUserId();
@@ -127,11 +134,15 @@ public class PollService {
         return intervals
                 .values()
                 .stream()
-                .reduce((a, b) -> a.intersection(b))
+                .reduce(IntervalSet::intersection)
                 .orElse(new IntervalSet<>())
                 .getIntervals()
                 .stream()
                 .map((interval) -> new PollDay(interval.begin(), interval.end()))
                 .toList();
+    }
+
+    public PollResult getPollResult(String pollId) {
+        return pollResultRepository.findByPoll_Uuid(UUID.fromString(pollId));
     }
 }

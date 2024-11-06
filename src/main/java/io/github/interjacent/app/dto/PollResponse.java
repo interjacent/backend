@@ -12,4 +12,5 @@ public class PollResponse {
     private List<PollDay> days;
     private List<UserIntervalsResponse> users;
     private List<PollDay> availables;
+    private PollDay result;
 }

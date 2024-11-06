@@ -10,7 +10,6 @@ import lombok.Setter;
 @Getter
 @Setter
 public class NewPollResponse {
-    private long id;
-    private String publicId;
-    private String privateId;
+    private String pollId;
+    private String adminToken;
 }
