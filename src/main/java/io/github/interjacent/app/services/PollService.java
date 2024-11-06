@@ -108,21 +108,21 @@ public class PollService {
 
         pollUserIntervalRepository.save(pollUserInterval);
     }
-    
-    public List<PollDay> available(String publicPollId) {
-        List<PollUserInterval> pollIntervals = pollUserRepository.findByPoll_Uuid(
-                UUID.fromString(publicPollId)
-        ).getIntervals();
 
+    public List<PollDay> calculateAvailables(String publicPollId) {
         Map<UUID, IntervalSet<Long>> intervals = new TreeMap<>();
 
-        for (PollUserInterval interval : pollIntervals) {
-            UUID uuid = interval.getUser().getUserId();
-            if (!intervals.containsKey(uuid)) {
-                intervals.put(uuid, new IntervalSet<>());
+        pollUserRepository.findByPoll_Uuid(
+                UUID.fromString(publicPollId)
+        ).forEach(pollUser -> {
+            for (PollUserInterval interval : pollUser.getIntervals()) {
+                UUID uuid = interval.getUser().getUserId();
+                if (!intervals.containsKey(uuid)) {
+                    intervals.put(uuid, new IntervalSet<>());
+                }
+                intervals.get(uuid).add(new Interval<Long>(interval.getStart(), interval.getEnd()));
             }
-            intervals.get(uuid).add(new Interval<Long>(interval.getStart(), interval.getEnd()));
-        }
+        });
 
         return intervals
                 .values()

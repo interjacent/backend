@@ -69,7 +69,7 @@ public class PollController {
 
             return userIntervalsResponse;
         }).toList());
-        response.setAvailables(pollService.available(publicPollId));
+        response.setAvailables(pollService.calculateAvailables(publicPollId));
 
         return ResponseEntity.ok(response);
     }
