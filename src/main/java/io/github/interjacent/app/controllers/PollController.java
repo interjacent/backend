@@ -2,6 +2,7 @@ package io.github.interjacent.app.controllers;
 
 import io.github.interjacent.app.dto.*;
 import io.github.interjacent.app.entity.Poll;
+import io.github.interjacent.app.entity.PollResult;
 import io.github.interjacent.app.entity.PollUser;
 import io.github.interjacent.app.entity.PollUserInterval;
 import io.github.interjacent.app.services.PollService;
@@ -12,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RequiredArgsConstructor
 @RestController
@@ -34,27 +36,27 @@ public class PollController {
     }
 
     @PostMapping(
-        path = "{pollId}/join",
+        path = "{publicPollId}/join",
         consumes = MediaType.APPLICATION_JSON_VALUE,
         produces = MediaType.APPLICATION_JSON_VALUE
     )
     public ResponseEntity<?> joinToPoll(
-        @PathVariable String pollId,
+        @PathVariable String publicPollId,
         @RequestBody PollInviteRequest request
     ) {
-        pollService.joinUser(pollId, request);
+        pollService.joinUser(publicPollId, request);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(true);
     }
 
     @GetMapping(
-        path = "{pollId}",
+        path = "{publicPollId}",
         produces = MediaType.APPLICATION_JSON_VALUE
     )
     public ResponseEntity<?> getPoll(
-        @PathVariable String pollId
+        @PathVariable String publicPollId
     ) {
-        Poll poll = pollService.getPoll(pollId);
+        Poll poll = pollService.getPoll(publicPollId);
 
         PollResponse response = new PollResponse();
 
@@ -69,21 +71,27 @@ public class PollController {
 
             return userIntervalsResponse;
         }).toList());
-        response.setAvailables(pollService.calculateAvailable(pollId));
+        response.setAvailables(pollService.calculateAvailables(publicPollId));
+
+        PollResult pollResult = pollService.getPollResult(publicPollId);
+
+        response.setResult(Optional.ofNullable(pollResult).map(result ->
+                    new PollDay(pollResult.getStart(), pollResult.getEnd())
+                ).orElse(null));
 
         return ResponseEntity.ok(response);
     }
 
     @GetMapping(
-        path = "{pollId}/users/{userId}/intervals",
+        path = "{publicPollId}/users/{userId}/intervals",
         produces = MediaType.APPLICATION_JSON_VALUE
     )
     public ResponseEntity<?> getUserIntervals(
-            @PathVariable String pollId,
+            @PathVariable String publicPollId,
             @PathVariable String userId
     ) {
-        PollUser pollUser = pollService.getUser(pollId, userId);
-        List<PollUserInterval> pollUserIntervals = pollService.getUserIntervals(pollId, userId);
+        PollUser pollUser = pollService.getUser(publicPollId, userId);
+        List<PollUserInterval> pollUserIntervals = pollService.getUserIntervals(publicPollId, userId);
         UserIntervalsResponse response = new UserIntervalsResponse();
         response.setUserName(pollUser.getUsername());
         response.setIntervals(pollUserIntervals.stream().map(pollUserInterval ->
@@ -97,38 +105,37 @@ public class PollController {
     }
 
     @PostMapping(
-        path = "{pollId}/users/{userId}/intervals",
+        path = "{publicPollId}/users/{userId}/intervals",
         consumes = MediaType.APPLICATION_JSON_VALUE,
         produces = MediaType.APPLICATION_JSON_VALUE
     )
     public ResponseEntity<?> addUserInterval(
-        @PathVariable String pollId,
+        @PathVariable String publicPollId,
         @PathVariable String userId,
         @RequestBody UserInterval userInterval
     ) {
-        pollService.addUserInterval(pollId, userId, userInterval);
+        pollService.addUserInterval(publicPollId, userId, userInterval);
 
         return ResponseEntity.ok(true);
     }
 
     @PostMapping(
-        path = "{adminToken}/finish",
+        path = "{privatePollId}/finish",
         consumes = MediaType.APPLICATION_JSON_VALUE,
         produces = MediaType.APPLICATION_JSON_VALUE
     )
     public ResponseEntity<?> finish(
-        @PathVariable String adminToken,
-        @RequestBody UserIntervalsResponse userIntervalResponse
+        @PathVariable String privatePollId,
+        @RequestBody PollDay pollResult
     ) {
-        Poll poll = pollService.getPoll(adminToken);
-
+        Poll poll = pollService.getPollByAdminToken(privatePollId);
         if (poll == null)
-            return ResponseEntity.status(404).body(userIntervalResponse);
+            return ResponseEntity.status(404).build();
         if (!poll.getOpen())
-            return ResponseEntity.status(400).body(userIntervalResponse);
+            return ResponseEntity.status(400).build();
 
-        pollService.closePoll(poll);
+        pollService.closePollAndSaveResult(poll, pollResult);
 
-        return ResponseEntity.ok(userIntervalResponse);
+        return ResponseEntity.ok(pollResult);
     }
 }
