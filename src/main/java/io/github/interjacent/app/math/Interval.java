@@ -51,7 +51,7 @@ public record Interval<N extends Comparable<N>>(
         if (begin.compareTo(other.begin) < 0) {
             return end.compareTo(other.begin) >= 0;
         }
-        else if (begin.compareTo(other.begin) < 0) {
+        else if (begin.compareTo(other.begin) > 0) {
             return begin.compareTo(other.end) <= 0;
         }
         else { // begin == other.begin
