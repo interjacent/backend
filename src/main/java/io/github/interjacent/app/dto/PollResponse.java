@@ -11,4 +11,5 @@ public class PollResponse {
     private boolean active;
     private List<PollDay> days;
     private List<UserIntervalsResponse> users;
+    private List<PollDay> availables;
 }

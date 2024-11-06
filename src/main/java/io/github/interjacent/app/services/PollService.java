@@ -55,6 +55,11 @@ public class PollService {
         return savedEntity;
     }
 
+    public void closePoll(Poll poll) {
+        poll.setOpen(false);
+        pollRepository.save(poll);
+    }
+
     public void joinUser(String publicPollId, PollInviteRequest request) {
         Poll poll = pollRepository.findByUuid(UUID.fromString(publicPollId));
 

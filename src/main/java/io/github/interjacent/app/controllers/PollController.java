@@ -4,6 +4,8 @@ import io.github.interjacent.app.dto.*;
 import io.github.interjacent.app.entity.Poll;
 import io.github.interjacent.app.entity.PollUser;
 import io.github.interjacent.app.entity.PollUserInterval;
+import io.github.interjacent.app.math.*;
+import io.github.interjacent.app.repositories.PollRepository;
 import io.github.interjacent.app.services.PollService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -108,5 +110,33 @@ public class PollController {
         pollService.addUserInterval(publicPollId, userId, userInterval);
 
         return ResponseEntity.ok(true);
+    }
+
+    @PostMapping(
+        path = "{privatePollId}/finish",
+        consumes = MediaType.APPLICATION_JSON_VALUE,
+        produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    public ResponseEntity<?> finish(
+        @PathVariable String privatePollId,
+        @RequestBody UserIntervalsResponse userIntervalResponse
+    ) {
+        Poll poll = pollService.getPoll(privatePollId);
+        if (poll == null)
+            return ResponseEntity.status(404).body(userIntervalResponse);
+        if (!poll.getOpen())
+            return ResponseEntity.status(400).body(userIntervalResponse);
+
+        pollService.closePoll(poll);
+
+        return ResponseEntity.ok(userIntervalResponse);
+    }
+
+    private static IntervalSet<Long> transformSet(UserIntervalsResponse response) {
+        IntervalSet<Long> retval = new IntervalSet<>();
+        for (UserInterval interval : response.getIntervals()) {
+            retval.add(new Interval<Long>(interval.getStart(), interval.getEnd()));
+        }
+        return retval;
     }
 }
