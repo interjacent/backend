@@ -77,6 +77,8 @@ paths:
                 $ref: '#/components/schemas/IntervalResponseSchema'
         '400':
           description: Invalid poll id or unable to calculate time interval
+        '403':
+          description: Admin token is not present or not match admin token for poll
         '404':
           description: No such poll with given id
   /polls/{pollId}:
