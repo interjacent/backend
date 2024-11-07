@@ -56,6 +56,9 @@ public class PollController {
         @PathVariable String pollId
     ) {
         Poll poll = pollService.getPoll(pollId);
+        if (poll == null) {
+            return ResponseEntity.notFound().build();
+        }
 
         PollResponse response = new PollResponse();
 

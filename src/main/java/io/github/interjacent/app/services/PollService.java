@@ -76,21 +76,33 @@ public class PollService {
     }
 
     public Poll getPoll(String pollId) {
-        return pollRepository.findByUuid(UUID.fromString(pollId));
+        try {
+            return pollRepository.findByUuid(UUID.fromString(pollId));
+        } catch (IllegalArgumentException exc) {
+            return null;
+        }
     }
 
     public PollUser getUser(String pollId, String userId) {
-        return pollUserRepository.findByPoll_UuidAndUserId(
+        try {
+            return pollUserRepository.findByPoll_UuidAndUserId(
                 UUID.fromString(pollId),
                 UUID.fromString(userId)
-        );
+            );
+        } catch (IllegalArgumentException exc) {
+            return null;
+        }
     }
 
     public List<PollUserInterval> getUserIntervals(String pollId, String userId) {
-        return pollUserRepository.findByPoll_UuidAndUserId(
+        try {
+            return pollUserRepository.findByPoll_UuidAndUserId(
                 UUID.fromString(pollId),
                 UUID.fromString(userId)
-        ).getIntervals();
+            ).getIntervals();
+        } catch (IllegalArgumentException exc) {
+            return List.of();
+        }
     }
 
     public void setUserInterval(String pollId, String userId, List<UserInterval> userIntervals) {
