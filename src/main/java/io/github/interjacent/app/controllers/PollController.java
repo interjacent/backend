@@ -119,22 +119,24 @@ public class PollController {
     }
 
     @PostMapping(
-        path = "{adminToken}/finish",
+        path = "{pollId}/finish",
         consumes = MediaType.APPLICATION_JSON_VALUE,
         produces = MediaType.APPLICATION_JSON_VALUE
     )
     public ResponseEntity<?> finish(
-        @PathVariable String adminToken,
-        @RequestBody PollDay pollResult
+        @PathVariable String pollId,
+        @RequestBody PollFinishRequest request
     ) {
-        Poll poll = pollService.getPollByAdminToken(adminToken);
+        Poll poll = pollService.getPoll(pollId);
         if (poll == null)
-            return ResponseEntity.status(404).build();
-        if (!poll.getOpen())
-            return ResponseEntity.status(400).build();
+            return ResponseEntity.notFound().build();
+        else if (!poll.getOpen())
+            return ResponseEntity.badRequest().build();
+        else if (request.getAdminToken() == null || !poll.getAdminToken().equals(request.getAdminToken()))
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
 
-        pollService.closePollAndSaveResult(poll, pollResult);
+        pollService.closePollAndSaveResult(poll, request);
 
-        return ResponseEntity.ok(pollResult);
+        return ResponseEntity.ok(new PollDay(request.getStart(), request.getEnd()));
     }
 }

@@ -1,9 +1,6 @@
 package io.github.interjacent.app.services;
 
-import io.github.interjacent.app.dto.NewPollRequest;
-import io.github.interjacent.app.dto.PollDay;
-import io.github.interjacent.app.dto.PollInviteRequest;
-import io.github.interjacent.app.dto.UserInterval;
+import io.github.interjacent.app.dto.*;
 import io.github.interjacent.app.entity.*;
 import io.github.interjacent.app.math.*;
 import io.github.interjacent.app.repositories.*;
@@ -54,11 +51,11 @@ public class PollService {
         return savedEntity;
     }
 
-    public void closePollAndSaveResult(Poll poll, PollDay pollResult) {
+    public void closePollAndSaveResult(Poll poll, PollFinishRequest request) {
         PollResult result = new PollResult();
         result.setPoll(poll);
-        result.setStart(pollResult.getStart());
-        result.setEnd(pollResult.getEnd());
+        result.setStart(request.getStart());
+        result.setEnd(request.getEnd());
 
         pollResultRepository.save(result);
 
@@ -80,10 +77,6 @@ public class PollService {
 
     public Poll getPoll(String pollId) {
         return pollRepository.findByUuid(UUID.fromString(pollId));
-    }
-
-    public Poll getPollByAdminToken(String adminToken) {
-        return pollRepository.findByAdminToken(adminToken);
     }
 
     public PollUser getUser(String pollId, String userId) {

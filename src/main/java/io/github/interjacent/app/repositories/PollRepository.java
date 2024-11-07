@@ -9,6 +9,4 @@ import java.util.UUID;
 @Repository
 public interface PollRepository extends JpaRepository<Poll, Long> {
     Poll findByUuid(UUID uuid);
-
-    Poll findByAdminToken(String adminToken);
 }
