@@ -93,20 +93,28 @@ public class PollService {
         ).getIntervals();
     }
 
-    public void addUserInterval(String pollId, String userId, UserInterval userInterval) {
+    public void setUserInterval(String pollId, String userId, List<UserInterval> userIntervals) {
         PollUser pollUser = pollUserRepository.findByPoll_UuidAndUserId(
                     UUID.fromString(pollId),
                     UUID.fromString(userId)
                 );
 
-        PollUserInterval pollUserInterval = new PollUserInterval();
-        pollUserInterval.setUser(pollUser);
-        pollUserInterval.setStart(userInterval.getStart());
-        pollUserInterval.setEnd(userInterval.getEnd());
+        pollUserIntervalRepository.deleteAll(pollUser.getIntervals());
 
-        pollUser.getIntervals().add(pollUserInterval);
+        pollUser.getIntervals().clear();
 
-        pollUserIntervalRepository.save(pollUserInterval);
+        userIntervals.forEach(userInterval -> {
+            PollUserInterval pollUserInterval = new PollUserInterval();
+            pollUserInterval.setUser(pollUser);
+            pollUserInterval.setStart(userInterval.getStart());
+            pollUserInterval.setEnd(userInterval.getEnd());
+
+            pollUserIntervalRepository.save(pollUserInterval);
+
+            pollUser.getIntervals().add(pollUserInterval);
+        });
+
+        pollUserRepository.save(pollUser);
     }
 
     public List<PollDay> calculateAvailables(String pollId) {
