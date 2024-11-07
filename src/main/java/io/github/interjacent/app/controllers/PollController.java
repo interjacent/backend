@@ -17,7 +17,7 @@ import java.util.Optional;
 
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("/api/v1/polls/")
+@RequestMapping("/api/v1/polls")
 public class PollController {
     private final PollService pollService;
 
@@ -35,7 +35,7 @@ public class PollController {
     }
 
     @PostMapping(
-        path = "{pollId}/join",
+        path = "/{pollId}/join",
         consumes = MediaType.APPLICATION_JSON_VALUE,
         produces = MediaType.APPLICATION_JSON_VALUE
     )
@@ -49,7 +49,7 @@ public class PollController {
     }
 
     @GetMapping(
-        path = "{pollId}",
+        path = "/{pollId}",
         produces = MediaType.APPLICATION_JSON_VALUE
     )
     public ResponseEntity<?> getPoll(
@@ -82,7 +82,7 @@ public class PollController {
     }
 
     @GetMapping(
-        path = "{pollId}/users/{userId}/intervals",
+        path = "/{pollId}/users/{userId}/intervals",
         produces = MediaType.APPLICATION_JSON_VALUE
     )
     public ResponseEntity<?> getUserIntervals(
@@ -104,7 +104,7 @@ public class PollController {
     }
 
     @PostMapping(
-        path = "{pollId}/users/{userId}/intervals",
+        path = "/{pollId}/users/{userId}/intervals",
         consumes = MediaType.APPLICATION_JSON_VALUE,
         produces = MediaType.APPLICATION_JSON_VALUE
     )
@@ -119,7 +119,7 @@ public class PollController {
     }
 
     @PostMapping(
-        path = "{pollId}/finish",
+        path = "/{pollId}/finish",
         consumes = MediaType.APPLICATION_JSON_VALUE,
         produces = MediaType.APPLICATION_JSON_VALUE
     )

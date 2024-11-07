@@ -5,7 +5,7 @@ set -eux
 BASE_URL=http://localhost:8080/api/v1/polls
 
 # create poll
-CREATE_RESPONSE=$(curl "$BASE_URL/" -f -H Content-Type:application/json --data-raw '{"days": [{"start": 1731186000, "end": 1731272400}, {"start": 1731358800, "end": 1731445200}]}')
+CREATE_RESPONSE=$(curl "$BASE_URL" -f -H Content-Type:application/json --data-raw '{"days": [{"start": 1731186000, "end": 1731272400}, {"start": 1731358800, "end": 1731445200}]}')
 
 POLL_ID=$(jq <<<"$CREATE_RESPONSE" -r .pollId)
 ADMIN_TOKEN=$(jq <<<"$CREATE_RESPONSE" -r .adminToken)
