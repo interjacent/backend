@@ -14,11 +14,11 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/NewPollRequestSchema'
-      tags: 
+      tags:
         - Polls
       responses:
         '201':
-          description: Returns information about 
+          description: Returns information about
           content:
             application/json:
               schema:
@@ -49,14 +49,14 @@ paths:
             application/json:
               schema:
                 type: boolean
-  /polls/{adminToken}/finish:
+  /polls/{pollId}/finish:
     post:
       summary: Stop poll and choose interval
       parameters:
-        - name: adminToken
+        - name: pollId
           in: path
           required: true
-          description: Admin token
+          description: Poll id
           schema:
             type: integer
             format: int64
@@ -65,7 +65,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PollIntervalSchema'
+              $ref: '#/components/schemas/PollFinishRequestSchema'
       tags:
         - Polls
       responses:
@@ -91,8 +91,8 @@ paths:
             type: integer
             format: int64
             nullable: false
-      tags: 
-        - Polls      
+      tags:
+        - Polls
       responses:
         '200':
           description: Returns poll information
@@ -128,7 +128,7 @@ paths:
           in: query
           required: false
           description: Start timestamp for fetching intervals. If omitted, intervals starting from first day of current week will be fetched
-          schema: 
+          schema:
             type: integer
             format: int64
             minimum: 0
@@ -137,7 +137,7 @@ paths:
       tags:
         - Intervals
       responses:
-        '200': 
+        '200':
           description: Returns all time intervals for user
           content:
             application/json:
@@ -177,7 +177,7 @@ paths:
       tags:
         - Intervals
       responses:
-        '201': 
+        '201':
           description: Returns if interval successfully added
           content:
             application/json:
@@ -191,20 +191,20 @@ components:
     PollIntervalSchema:
       type: object
       properties:
-          start:
-            description: UNIX start time (included)
-            type: integer
-            format: int64
-            minimum: 0
-            exclusiveMinimum: true
-            example: 1000
-          end:
-            description: UNIX end time (excluded)
-            type: integer
-            format: int64
-            minimum: 0
-            exclusiveMinimum: true
-            example: 2000
+        start:
+          description: UNIX start time (included)
+          type: integer
+          format: int64
+          minimum: 0
+          exclusiveMinimum: true
+          example: 1000
+        end:
+          description: UNIX end time (excluded)
+          type: integer
+          format: int64
+          minimum: 0
+          exclusiveMinimum: true
+          example: 2000
     NewPollRequestSchema:
       type: object
       properties:
@@ -213,7 +213,7 @@ components:
           type: array
           items:
             allOf:
-              - $ref: '#/components/schemas/PollIntervalSchema' 
+              - $ref: '#/components/schemas/PollIntervalSchema'
     NewPollResponseSchema:
       type: object
       properties:
@@ -235,7 +235,7 @@ components:
         userName:
           description: Username
           type: string
-          nullable: false      
+          nullable: false
     PollResponseSchema:
       type: object
       properties:
@@ -247,7 +247,7 @@ components:
           type: array
           items:
             allOf:
-              - $ref: '#/components/schemas/PollIntervalSchema' 
+              - $ref: '#/components/schemas/PollIntervalSchema'
         users:
           description: List of participants
           type: array
@@ -280,7 +280,7 @@ components:
           items:
             allOf:
               - $ref: '#/components/schemas/IntervalResponseSchema'
-    IntervalResponseSchema: 
+    IntervalResponseSchema:
       type: object
       properties:
         start:
@@ -301,3 +301,24 @@ components:
           description: Participant is busy or not during this interval
           type: boolean
           example: true
+    PollFinishRequestSchema:
+      type: object
+      properties:
+        adminToken:
+          description: Admin token
+          type: string
+          nullable: false
+        start:
+          description: UNIX start time (included)
+          type: integer
+          format: int64
+          minimum: 0
+          exclusiveMinimum: true
+          example: 1000
+        end:
+          description: UNIX end time (excluded)
+          type: integer
+          format: int64
+          minimum: 0
+          exclusiveMinimum: true
+          example: 2000
