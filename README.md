@@ -1,19 +1,33 @@
-# interjacent backend
-This repository contains the source code of interjacent's backend.
+# interjacent 
 
-## Building and running
-Make sure you have Java 17 installed, then run the following command to launch the backend:
+Часто бывает сложно выбрать время встречи так, чтобы всем было удобно её посетить. Наш проект предлагает решение этой проблемы.
 
-```shell
-./gradlew bootRun
+Interjacent позволяет создавать простые опросы для выявления временного интервала, который был бы удобен всем участникам встречи.
+
+# Сборка и запуск
+
+Для сборки необходимо:
+
+- Склонировать текущий репозиторий;
+
+```bash
+git clone https://github.com/interjacent/backend
 ```
 
-Alternately, build a jar file separately:
+- Установить Java 17 или более новую версию при её отсутствии;
+
+- Запустить для сборки команду:
 
 ```shell
 ./gradlew bootJar
 ```
 
-You'll find the jar file in `./build/libs` (use the one without the `plain` suffix).
+- Запустить полученный jar-файл, находящийся в директории `build/libs`.
 
-When run, an HTTP server will be started on port 8080 by default.
+Вы также можете пропустить два предыдущих шага и сразу запустить проект командой:
+
+```shell
+./gradlew bootRun
+```
+
+После вышеуказанных действий будет запущен HTTP-сервер на порте 8080 по умолчанию.
