@@ -4,6 +4,8 @@
 
 Interjacent позволяет создавать простые опросы для выявления временного интервала, который был бы удобен всем участникам встречи.
 
+[Слайды](https://docs.google.com/presentation/d/14M_EeeYo0_RwzjTfn3l_jxKAGqeZJJv80MuBQNnnIzk/edit?usp=sharing)
+
 # Сборка и запуск
 
 Для сборки необходимо:
